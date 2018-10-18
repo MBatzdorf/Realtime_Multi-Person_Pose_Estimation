@@ -10,9 +10,10 @@ function genJSON(dataset)
         isValidation = 0;
         
         load('dataset/COCO/mat/coco_kpt.mat');
-        load('dataset/COCO/mat/coco_val.mat');
+        %load('dataset/COCO/mat/coco_val.mat');
         
-        for mode = 0:1
+        %for mode = 0:1
+        for mode = 0
             if mode == 0
                 RELEASE = coco_kpt;
             else
@@ -21,14 +22,12 @@ function genJSON(dataset)
             
             trainIdx = 1:1:size(RELEASE,2);
 
-            % In COCO:(1-'nose'	2-'left_eye' 3-'right_eye' 4-'left_ear' 5-'right_ear'
-            %          6-'left_shoulder' 7-'right_shoulder'	8-'left_elbow' 9-'right_elbow' 10-'left_wrist'	
-            %          11-'right_wrist'	12-'left_hip' 13-'right_hip' 14-'left_knee'	15-'right_knee'	
-            %          16-'left_ankle' 17-'right_ankle' )
+            % In COCO:(1-'pen_tip'	2-'pen_body_bottom_center' 3-'pen_body_bottom_left' 4-'pen_body_bottom_right' 5-'pen_body_top_center'
+            %          6-'pen_body_top_left' 7-'pen_body_top_right' )
 
             for i = trainIdx
-                numPeople = length(RELEASE(i).annorect);
-                fprintf('prepareJoint: %d/%d (numPeople: %d)\n', i, trainIdx(end), numPeople);
+                numPencils = length(RELEASE(i).annorect);
+                fprintf('prepareJoint: %d/%d (numPencils: %d)\n', i, trainIdx(end), numPencils);
                 %allPeopleAnno = RELEASE.annolist(i).annorect;
                 prev_center = [];
 
@@ -47,14 +46,14 @@ function genJSON(dataset)
                 h = RELEASE(i).annorect.img_height;
                 w = RELEASE(i).annorect.img_width;
 
-                for p = 1:numPeople
+                for p = 1:numPencils
 
-                    % skip this person if parts number is too low or if
+                    % skip this pencil if parts number is too low or if
                     % segmentation area is too small
-                    if RELEASE(i).annorect(p).num_keypoints < 5 || RELEASE(i).annorect(p).area < 32*32
+                    if RELEASE(i).annorect(p).num_keypoints < 3 || RELEASE(i).annorect(p).area < 32*32
                         continue;
                     end
-                    % skip this person if the distance to exiting person is too small
+                    % skip this pencil if the distance to exiting pencil is too small
                     person_center = [RELEASE(i).annorect(p).bbox(1)+RELEASE(i).annorect(p).bbox(3)/2, RELEASE(i).annorect(p).bbox(2)+RELEASE(i).annorect(p).bbox(4)/2];
                     flag = 0;
                     for k = 1:size(prev_center,1)
@@ -67,7 +66,7 @@ function genJSON(dataset)
                     if flag ==1
                         continue;
                     end
-                    %fprintf('%d/%d/ image%d:', p,numPeople,i);
+                    %fprintf('%d/%d/ image%d:', p,numPencils,i);
                     if mode == 0
                         joint_all(count).dataset = 'COCO';
                     else
@@ -78,9 +77,9 @@ function genJSON(dataset)
 
                     % set image path
                     if mode == 0
-                        joint_all(count).img_paths = sprintf('train2014/COCO_train2014_%012d.jpg', RELEASE(i).image_id);
+                        joint_all(count).img_paths = sprintf('train/COCO_train2014_%012d.jpg', RELEASE(i).image_id);
                     else
-                        joint_all(count).img_paths = sprintf('val2014/COCO_val2014_%012d.jpg', RELEASE(i).image_id);
+                        joint_all(count).img_paths = sprintf('val/PENPOSE_val_%012d.jpg', RELEASE(i).image_id);
                     end
                     %joint_all(count).img_paths = RELEASE(i).image_id;
                     %[h,w,~] = size(imread(['../dataset/COCO/images/', joint_all(count).img_paths]));
@@ -94,7 +93,7 @@ function genJSON(dataset)
 
                     % set part label: joint_all is (np-3-nTrain)
                     % for this very center person
-                    for part = 1:17
+                    for part = 1:7
                         joint_all(count).joint_self(part, 1) = anno(part*3-2);
                         joint_all(count).joint_self(part, 2) = anno(part*3-1);
 
@@ -110,7 +109,7 @@ function genJSON(dataset)
                     % pad it into 17x3
                     dim_1 = size(joint_all(count).joint_self, 1);
                     dim_3 = size(joint_all(count).joint_self, 3);
-                    pad_dim = 17 - dim_1;
+                    pad_dim = 7 - dim_1;
                     joint_all(count).joint_self = [joint_all(count).joint_self; zeros(pad_dim, 3, dim_3)];
                     % set scale
                     joint_all(count).scale_provided = RELEASE(i).annorect(p).bbox(4)/368;
@@ -119,7 +118,7 @@ function genJSON(dataset)
                     % for other person on the same image
                     count_other = 1;
                     joint_all(count).joint_others = cell(0,0);
-                    for op = 1:numPeople
+                    for op = 1:numPencils
                         if op == p || RELEASE(i).annorect(op).num_keypoints == 0
                             continue; 
                         end
@@ -134,7 +133,7 @@ function genJSON(dataset)
 
                         % other people
                         joint_others{count_other} = zeros(17,3);
-                        for part = 1:17
+                        for part = 1:7
                             joint_all(count).joint_others{count_other}(part, 1) = anno(part*3-2);
                             joint_all(count).joint_others{count_other}(part, 2) = anno(part*3-1);
 

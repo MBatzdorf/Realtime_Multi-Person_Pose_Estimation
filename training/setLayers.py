@@ -9,7 +9,7 @@ from ConfigParser import SafeConfigParser
 # caffe_path = parser.get('caffe', 'path')
 # sys.path.append('%s/python' % caffe_path)
 
-caffe_path = '/home/zhecao/caffe_train/'
+caffe_path = '/media/marco/0e5afcaa-ae0b-45cb-a2c3-406dfeb96d75/marco/PenPose/caffe_train/'
 import sys, os
 sys.path.insert(0, os.path.join(caffe_path, 'python'))
 import caffe
@@ -34,7 +34,7 @@ def setLayers_twoBranches(data_source, batch_size, layername, kernel, stride, ou
     elif deploy == False:
         n.data, n.tops['label'] = L.CPMData(data_param=dict(backend=1, source=data_source, batch_size=batch_size), 
                                                     cpm_transform_param=transform_param_in, ntop=2)
-        n.tops[label_name[2]], n.tops[label_name[3]], n.tops[label_name[4]], n.tops[label_name[5]] = L.Slice(n.label, slice_param=dict(axis=1, slice_point=[38, num_parts+1, num_parts+39]), ntop=4)
+        n.tops[label_name[2]], n.tops[label_name[3]], n.tops[label_name[4]], n.tops[label_name[5]] = L.Slice(n.label, slice_param=dict(axis=1, slice_point=[20, num_parts+1, num_parts+21]), ntop=4)
         n.tops[label_name[0]] = L.Eltwise(n.tops[label_name[2]], n.tops[label_name[4]], operation=P.Eltwise.PROD)
         n.tops[label_name[1]] = L.Eltwise(n.tops[label_name[3]], n.tops[label_name[5]], operation=P.Eltwise.PROD)
 
@@ -152,9 +152,9 @@ def setLayers_twoBranches(data_source, batch_size, layername, kernel, stride, ou
                 #    lr_m = lr_sub
                 if layername[l+1] == 'L2' or layername[l+1] == 'L3':
                     if level == 0:
-                        outCH[l] = 38
+                        outCH[l] = 20
                     else:
-                        outCH[l] = 19
+                        outCH[l] = 8
 
                 n.tops[conv_name] = L.Convolution(n.tops[last_layer[level]], kernel_size=kernel[l],
                                                       num_output=outCH[l], pad=int(math.floor(kernel[l]/2)),
@@ -341,14 +341,13 @@ weight_decay: 0.0005\n\
 # The learning rate policy\n\
 lr_policy: "step"\n\
 gamma: 0.333\n\
-#stepsize: 29166\n\
 stepsize: 136106 #68053\n\
 # Display every 100 iterations\n\
-display: 5\n\
+display: 50\n\
 # The maximum number of iterations\n\
-max_iter: 600000\n\
+max_iter: 500000\n\
 # snapshot intermediate results\n\
-snapshot: 2000\n\
+snapshot: 500\n\
 snapshot_prefix: "%s/pose"\n\
 # solver mode: CPU or GPU\n\
 solver_mode: GPU\n' % (base_lr, folder_name)
@@ -429,7 +428,7 @@ def calcAndWriteStat(sub_dir, layername, kernel, stride, outCH, args):
 def getBash():
     return ('#!/usr/bin/env sh\n\
 %s/build/tools/caffe train --solver=pose_solver.prototxt --gpu=$1 \
---weights=../../../model/vgg/VGG_ILSVRC_19_layers.caffemodel \
+--weights=/media/marco/0e5afcaa-ae0b-45cb-a2c3-406dfeb96d75/marco/PenPose/Realtime_Multi-Person_Pose_Estimation/model/vgg/VGG_ILSVRC_19_layers.caffemodel \
 2>&1 | tee ./output.txt' % caffe_path)
 
 if __name__ == "__main__":
@@ -445,19 +444,19 @@ if __name__ == "__main__":
 
     # Two branch: weight = 1, scale 0.5~1.1, fix the mode, base_lr = 4e-5, batch_size = 10
     if(exp == 1):
-        directory = 'COCO_exp_caffe/pose56/exp22/'
-        serverFolder = '/home/zhecao/COCO_kpt/pose56/exp22'
-        base_folder = '/media/posenas4b/User/zhe/arch/'+directory+'model'
-        dataFolder = '/home/zhecao/COCO_kpt/lmdb_trainVal'
-        source = '/home/zhecao/COCO_kpt/lmdb_trainVal'
+        directory = 'COCO_exp_caffe/pose27/exp22/'
+        serverFolder = '/media/marco/0e5afcaa-ae0b-45cb-a2c3-406dfeb96d75/marco/Documents/COCO_kpt/pose27/exp22'
+        base_folder = '/media/marco/0e5afcaa-ae0b-45cb-a2c3-406dfeb96d75/marco/Documents/arch/'+directory+'model'
+        dataFolder = '/media/marco/0e5afcaa-ae0b-45cb-a2c3-406dfeb96d75/marco/Documents/COCO_kpt/lmdb'
+        source = '/media/marco/0e5afcaa-ae0b-45cb-a2c3-406dfeb96d75/marco/Documents/COCO_kpt/lmdb'
         base_lr = 4e-5   # 2e-5
-        batch_size = 10
-        np = 56    # num_parts
+        batch_size = 2
+        np = 27    # num_parts
         lr_mult_distro = [1.0, 1.0, 4.0, 1]
         transform_param = dict(stride=8, crop_size_x=368, crop_size_y=368,
                                  target_dist=0.6, scale_prob=1, scale_min=0.5, scale_max=1.1,
                                  max_rotate_degree=40, center_perterb_max=40, do_clahe=False,
-                                 visualize=False, np_in_lmdb=17, num_parts=np)
+                                 visualize=False, np_in_lmdb=7, num_parts=np)
         nCP = 3
         if not os.path.exists(directory):
             os.makedirs(directory)

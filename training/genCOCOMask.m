@@ -1,10 +1,11 @@
 addpath('dataset/COCO/coco/MatlabAPI/');
 addpath('../testing/util');
 
-mkdir('dataset/COCO/mask2014')
+mkdir('dataset/COCO/mask')
 vis = 0;
 
-for mode = 0:1
+%for mode = 0:1
+for mode = 1
     
     if mode == 1 
         load('dataset/COCO/mat/coco_kpt.mat');
@@ -18,13 +19,13 @@ for mode = 0:1
     
     for i = 1:L
         if mode == 1
-            img_paths = sprintf('images/train2014/COCO_train2014_%012d.jpg', coco_kpt(i).image_id);
-            img_name1 = sprintf('dataset/COCO/mask2014/train2014_mask_all_%012d.png', coco_kpt(i).image_id);
-            img_name2 = sprintf('dataset/COCO/mask2014/train2014_mask_miss_%012d.png', coco_kpt(i).image_id);
+            img_paths = sprintf('images/train/COCO_train2014_%012d.jpg', coco_kpt(i).image_id);
+            img_name1 = sprintf('dataset/COCO/mask/train_mask_all_%012d.png', coco_kpt(i).image_id);
+            img_name2 = sprintf('dataset/COCO/mask/train_mask_miss_%012d.png', coco_kpt(i).image_id);
         else
-            img_paths = sprintf('images/val2014/COCO_val2014_%012d.jpg', coco_kpt(i).image_id);
-            img_name1 = sprintf('dataset/COCO/mask2014/val2014_mask_all_%012d.png', coco_kpt(i).image_id);
-            img_name2 = sprintf('dataset/COCO/mask2014/val2014_mask_miss_%012d.png', coco_kpt(i).image_id);
+            img_paths = sprintf('images/val/PENPOSE_val_%012d.jpg', coco_kpt(i).image_id);
+            img_name1 = sprintf('dataset/COCO/mask/val_mask_all_%012d.png', coco_kpt(i).image_id);
+            img_name2 = sprintf('dataset/COCO/mask/val_mask_miss_%012d.png', coco_kpt(i).image_id);
         end
         
         try
@@ -72,14 +73,14 @@ for mode = 0:1
             coco_kpt(i).mask_miss = mask_miss;
             
             if mode == 1
-                img_name = sprintf('dataset/COCO/mask2014/train2014_mask_all_%012d.png', coco_kpt(i).image_id);
+                img_name = sprintf('dataset/COCO/mask/train_mask_all_%012d.png', coco_kpt(i).image_id);
                 imwrite(mask_all,img_name);
-                img_name = sprintf('dataset/COCO/mask2014/train2014_mask_miss_%012d.png', coco_kpt(i).image_id);
+                img_name = sprintf('dataset/COCO/mask/train_mask_miss_%012d.png', coco_kpt(i).image_id);
                 imwrite(mask_miss,img_name);
             else
-                img_name = sprintf('dataset/COCO/mask2014/val2014_mask_all_%012d.png', coco_kpt(i).image_id);
+                img_name = sprintf('dataset/COCO/mask/val_mask_all_%012d.png', coco_kpt(i).image_id);
                 imwrite(mask_all,img_name);
-                img_name = sprintf('dataset/COCO/mask2014/val2014_mask_miss_%012d.png', coco_kpt(i).image_id);
+                img_name = sprintf('dataset/COCO/mask/val_mask_miss_%012d.png', coco_kpt(i).image_id);
                 imwrite(mask_miss,img_name);
             end
             

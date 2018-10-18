@@ -5,7 +5,7 @@ import cv2
 import lmdb
 import sys, os
 # change your caffe path here
-sys.path.insert(0, os.path.join('/home/zhecao/caffe/', 'python/'))
+sys.path.insert(0, os.path.join('/media/marco/0e5afcaa-ae0b-45cb-a2c3-406dfeb96d75/marco/PenPose/caffe_train/', 'python/'))
 import caffe
 import os.path
 import struct
@@ -48,6 +48,7 @@ def writeLMDB(datasets, lmdb_path, validation):
 
 	for count in range(numSample):
 		idx = random_order[count]
+                #print("Data with idx " + str(idx) + ": " + str(data[idx]))
 		if (data[idx]['isValidation'] != 0 and validation == 1):
 			print '%d/%d skipped' % (count,idx)
 			continue
@@ -55,7 +56,7 @@ def writeLMDB(datasets, lmdb_path, validation):
 		if "MPI" in data[idx]['dataset']:
 			path_header = 'dataset/MPI/images/'
 		elif "COCO" in data[idx]['dataset']:
-			path_header = '/media/posenas4b/User/zhe/Convolutional-Pose-Machines/training/dataset/COCO/images/'
+			path_header = '/media/marco/0e5afcaa-ae0b-45cb-a2c3-406dfeb96d75/marco/PenPose/Realtime_Multi-Person_Pose_Estimation/training/dataset/COCO/images/'
 
 		print os.path.join(path_header, data[idx]['img_paths'])
 		img = cv2.imread(os.path.join(path_header, data[idx]['img_paths']))
@@ -63,12 +64,12 @@ def writeLMDB(datasets, lmdb_path, validation):
 		img_idx = data[idx]['img_paths'][-16:-3];
 		#print img_idx
 		if "COCO_val" in data[idx]['dataset']:
-			mask_all = cv2.imread(path_header+'mask2014/val2014_mask_all_'+img_idx+'png', 0)
-			mask_miss = cv2.imread(path_header+'mask2014/val2014_mask_miss_'+img_idx+'png', 0)
+			mask_all = cv2.imread(path_header+'mask/val_mask_all_'+img_idx+'png', 0)
+			mask_miss = cv2.imread(path_header+'mask/val_mask_miss_'+img_idx+'png', 0)
 			#print path_header+'mask2014/val2014_mask_miss_'+img_idx+'png'
 		elif "COCO" in data[idx]['dataset']:
-			mask_all = cv2.imread(path_header+'mask2014/train2014_mask_all_'+img_idx+'png', 0)
-			mask_miss = cv2.imread(path_header+'mask2014/train2014_mask_miss_'+img_idx+'png', 0)
+			mask_all = cv2.imread(path_header+'mask/train_mask_all_'+img_idx+'png', 0)
+			mask_miss = cv2.imread(path_header+'mask/train_mask_miss_'+img_idx+'png', 0)
 			#print path_header+'mask2014/train2014_mask_miss_'+img_idx+'png'
 		elif "MPI" in data[idx]['dataset']:
 			img_idx = data[idx]['img_paths'][-13:-3];
@@ -161,8 +162,9 @@ def writeLMDB(datasets, lmdb_path, validation):
 					for j in range(len(row_binary)):
 						meta_data[clidx][j] = ord(row_binary[j])
 					clidx = clidx + 1
-		
-		# print meta_data[0:12,0:48] 
+		#print("Metadata:")
+		#print meta_data 
+		#print meta_data[0:12,0:48] 
 		# total 7+4*nop lines
 		if "COCO" in data[idx]['dataset']:
 			img4ch = np.concatenate((img, meta_data, mask_miss[...,None], mask_all[...,None]), axis=2)
@@ -175,6 +177,7 @@ def writeLMDB(datasets, lmdb_path, validation):
 		
 		datum = caffe.io.array_to_datum(img4ch, label=0)
 		key = '%07d' % writeCount
+		
 		txn.put(key, datum.SerializeToString())
 		if(writeCount % 1000 == 0):
 			txn.commit()
@@ -192,4 +195,4 @@ def float2bytes(floats):
 
 if __name__ == "__main__":
 	#writeLMDB(['MPI'], '/home/zhecao/MPI_pose/lmdb', 1)
-	writeLMDB(['COCO'], '/home/zhecao/COCO_kpt/lmdb', 1)
+	writeLMDB(['COCO'], '/media/marco/0e5afcaa-ae0b-45cb-a2c3-406dfeb96d75/marco/Documents/COCO_kpt/lmdb', 1)
